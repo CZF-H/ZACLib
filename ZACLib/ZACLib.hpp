@@ -25,6 +25,7 @@ namespace ZACLib {
     private:
         std::vector<Node> trie;
         std::vector<std::string> outputs;
+        size_t max_rule_len = 0;
     };
 
     class Search {
@@ -43,6 +44,7 @@ namespace ZACLib {
     private:
         std::vector<Node> trie;
         std::vector<std::string> outputs;
+        size_t max_rule_len = 0;
     };
 
     class Has {

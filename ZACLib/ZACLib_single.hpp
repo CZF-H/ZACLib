@@ -102,6 +102,7 @@ namespace ZACLib {
 
         void AddRule(const ZAC_SV& from, const ZAC_SV& to) {
             if (from.empty()) return;
+            if (from.size() > max_rule_len) max_rule_len = from.size();
             int node = 0;
             for (const char i : from) {
                 const auto c = static_cast<unsigned char>(i);
@@ -155,38 +156,85 @@ namespace ZACLib {
             result.reserve(input.size());
 
             if (input.empty()) return result;
+            if (max_rule_len == 0) {
+                result.append(input.data(), input.size());
+                return result;
+            }
+
+            const auto invalid_output = Node::kInvalidOutput;
+            const size_t ring_size = max_rule_len + 1;
+            std::vector<size_t> pending_start(ring_size, invalid_output);
+            std::vector<size_t> pending_len(ring_size, 0);
+            std::vector<size_t> pending_output(ring_size, invalid_output);
+
+            auto get_best = [&](const size_t start, size_t& best_len, size_t& best_output) {
+                const size_t idx = start % ring_size;
+                if (pending_start[idx] == start) {
+                    best_len = pending_len[idx];
+                    best_output = pending_output[idx];
+                } else {
+                    best_len = 0;
+                    best_output = invalid_output;
+                }
+            };
+
+            auto set_best = [&](const size_t start, const size_t len, const size_t output_id) {
+                const size_t idx = start % ring_size;
+                if (pending_start[idx] != start) {
+                    pending_start[idx] = start;
+                    pending_len[idx] = 0;
+                    pending_output[idx] = invalid_output;
+                }
+                if (len > pending_len[idx]) {
+                    pending_len[idx] = len;
+                    pending_output[idx] = output_id;
+                }
+            };
 
             int state = 0;
-            const auto invalid_output = Node::kInvalidOutput;
-            std::vector<size_t> best_len(input.size(), 0);
-            std::vector<size_t> best_output(input.size(), invalid_output);
+            size_t last_pos = 0;
+            size_t cursor = 0;
 
             for (size_t i = 0; i < input.size(); ++i) {
                 const unsigned char c = input[i];
                 state = trie[state].next[c];
 
-                if (trie[state].output_id != Node::kInvalidOutput) {
+                if (trie[state].output_id != invalid_output) {
                     const size_t match_len = trie[state].match_len;
                     const size_t match_start = i + 1 - match_len;
-                    if (match_len > best_len[match_start]) {
-                        best_len[match_start] = match_len;
-                        best_output[match_start] = trie[state].output_id;
+                    set_best(match_start, match_len, trie[state].output_id);
+                }
+
+                const size_t finalize_before = (i + 1 > max_rule_len) ? (i + 1 - max_rule_len) : 0;
+                while (cursor < finalize_before && cursor < input.size()) {
+                    size_t best_len = 0;
+                    size_t best_output = invalid_output;
+                    get_best(cursor, best_len, best_output);
+                    if (best_len == 0) {
+                        ++cursor;
+                        continue;
                     }
+
+                    result.append(input.data() + last_pos, cursor - last_pos);
+                    result.append(outputs[best_output]);
+                    cursor += best_len;
+                    last_pos = cursor;
                 }
             }
 
-            size_t last_pos = 0;
-            for (size_t i = 0; i < input.size();) {
-                if (best_len[i] == 0) {
-                    ++i;
+            while (cursor < input.size()) {
+                size_t best_len = 0;
+                size_t best_output = invalid_output;
+                get_best(cursor, best_len, best_output);
+                if (best_len == 0) {
+                    ++cursor;
                     continue;
                 }
 
-                result.append(input.data() + last_pos, i - last_pos);
-                result.append(outputs[best_output[i]]);
-
-                i += best_len[i];
-                last_pos = i;
+                result.append(input.data() + last_pos, cursor - last_pos);
+                result.append(outputs[best_output]);
+                cursor += best_len;
+                last_pos = cursor;
             }
 
             if (last_pos < input.size()) {
@@ -199,6 +247,7 @@ namespace ZACLib {
     private:
         std::vector<Node> trie{Node{}};
         std::vector<std::string> outputs;
+        size_t max_rule_len = 0;
     };
 
 
