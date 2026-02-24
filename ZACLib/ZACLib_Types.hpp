@@ -50,8 +50,6 @@ namespace ZACLib {
 
         const char* begin() const { return m_data; }
         const char* end() const { return m_data + m_size; }
-        const char* rbegin() const { return m_data + m_size - 1; }
-        const char* rend() const { return m_data - 1; }
         const char* cbegin() const { return m_data; }
         const char* cend() const { return m_data + m_size; }
 
