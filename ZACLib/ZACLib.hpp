@@ -9,44 +9,9 @@
 #include <array>
 #include <vector>
 #include <string>
-#include <cstring>
+#include "ZACLib_Types.hpp"
 
 namespace ZACLib {
-
-    #if __cplusplus >= 201703L
-    #include <string_view>
-    using ZAC_SV = std::string_view;
-    #else
-    struct ZAC_SV {
-        const char* data;
-        size_t size;
-
-        ZAC_SV() : data(nullptr),
-                   size(0) {}
-
-        ZAC_SV(const char* d, const size_t s) : data(d),
-                                          size(s) {}
-
-        ZAC_SV(const std::string& s) : data(s.c_str()),
-                                       size(s.size()) {}
-
-        ZAC_SV(const char* d) : data(d),
-                                size(d ? std::strlen(d) : 0) {}
-        const char& operator[](const size_t i) const { return data[i]; }
-    };
-    #endif
-
-    struct Node {
-        std::array<int, 256> next{};
-        int fail;
-        int output_id;
-        size_t match_len;
-
-        Node() : fail(0),
-                 output_id(-1),
-                 match_len(0) { next.fill(-1); }
-    };
-
     class Replace {
     public:
         Replace();
