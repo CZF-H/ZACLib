@@ -195,18 +195,8 @@ namespace ZACLib {
             size_t last_pos = 0;
             size_t cursor = 0;
 
-            for (size_t i = 0; i < input.size(); ++i) {
-                const unsigned char c = input[i];
-                state = trie[state].next[c];
-
-                if (trie[state].output_id != invalid_output) {
-                    const size_t match_len = trie[state].match_len;
-                    const size_t match_start = i + 1 - match_len;
-                    set_best(match_start, match_len, trie[state].output_id);
-                }
-
-                const size_t finalize_before = (i + 1 > max_rule_len) ? (i + 1 - max_rule_len) : 0;
-                while (cursor < finalize_before && cursor < input.size()) {
+            auto emit_until = [&](const size_t upper_bound) {
+                while (cursor < upper_bound) {
                     size_t best_len = 0;
                     size_t best_output = invalid_output;
                     get_best(cursor, best_len, best_output);
@@ -220,22 +210,23 @@ namespace ZACLib {
                     cursor += best_len;
                     last_pos = cursor;
                 }
-            }
+            };
 
-            while (cursor < input.size()) {
-                size_t best_len = 0;
-                size_t best_output = invalid_output;
-                get_best(cursor, best_len, best_output);
-                if (best_len == 0) {
-                    ++cursor;
-                    continue;
+            for (size_t i = 0; i < input.size(); ++i) {
+                const unsigned char c = input[i];
+                state = trie[state].next[c];
+
+                if (trie[state].output_id != invalid_output) {
+                    const size_t match_len = trie[state].match_len;
+                    const size_t match_start = i + 1 - match_len;
+                    set_best(match_start, match_len, trie[state].output_id);
                 }
 
-                result.append(input.data() + last_pos, cursor - last_pos);
-                result.append(outputs[best_output]);
-                cursor += best_len;
-                last_pos = cursor;
+                const size_t finalize_before = (i + 1 > max_rule_len) ? (i + 1 - max_rule_len) : 0;
+                emit_until(finalize_before);
             }
+
+            emit_until(input.size());
 
             if (last_pos < input.size()) {
                 result.append(input.data() + last_pos, input.size() - last_pos);
