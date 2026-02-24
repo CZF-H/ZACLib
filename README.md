@@ -4,6 +4,10 @@
 
 ---
 
+![C++](https://img.shields.io/badge/language-C++-blue)
+![C++11](https://img.shields.io/badge/C++-C++11-green)
+![License](https://img.shields.io/badge/license-MIT-lightgrey)
+
 ## 功能模块
 
 ### 1. Replace
