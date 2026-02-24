@@ -148,7 +148,7 @@ mkdir build
 cd build
 cmake ..
 cmake --build .
-···
+```
 
 ## 注意事项
 
