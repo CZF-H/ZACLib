@@ -163,17 +163,13 @@ namespace ZACLib {
                 const unsigned char c = input[i];
                 state = trie[state].next[c];
 
-                int s = state;
-                while (s != 0) {
-                    if (trie[s].output_id != -1) {
-                        const size_t match_len = trie[s].match_len;
-                        const size_t match_start = i + 1 - match_len;
-                        if (match_len > best_len[match_start]) {
-                            best_len[match_start] = match_len;
-                            best_output[match_start] = static_cast<size_t>(trie[s].output_id);
-                        }
+                if (trie[state].output_id != -1) {
+                    const size_t match_len = trie[state].match_len;
+                    const size_t match_start = i + 1 - match_len;
+                    if (match_len > best_len[match_start]) {
+                        best_len[match_start] = match_len;
+                        best_output[match_start] = static_cast<size_t>(trie[state].output_id);
                     }
-                    s = trie[s].fail;
                 }
             }
 
