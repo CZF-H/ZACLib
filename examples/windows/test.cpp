@@ -1,7 +1,7 @@
 #include <iostream>
 
 #include "windows.h"
-#include "ZACLib/ZACLib_single.hpp"
+#include "../../ZACLib/ZACLib_single.hpp"
 
 int main() {
     SetConsoleCP(CP_UTF8);
