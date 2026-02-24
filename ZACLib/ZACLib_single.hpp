@@ -12,15 +12,14 @@
 #include <vector>
 #include <queue>
 
-// 以下文件使用其他文件的头文件保护是为了放在include ZACLib_Types.hpp后又include此文件导致重复定义问题
 // ZACLib_Types.hpp
 //
 // Created by wanjiangzhi on 2026/2/24.
 //
 
 // ReSharper disable CppNonExplicitConvertingConstructor
-#ifndef ZACLIB_TOOLS_HPP
-#define ZACLIB_TOOLS_HPP
+#ifndef ZACLIB_TYPES_HPP
+#define ZACLIB_TYPES_HPP
 
 #if __cplusplus >= 201703L
     #include <string_view>
@@ -85,7 +84,7 @@ namespace ZACLib {
     };
 }
 
-#endif //ZACLIB_TOOLS_HPP
+#endif //ZACLIB_TYPES_HPP
 
 // ZACLib_Types.hpp end
 

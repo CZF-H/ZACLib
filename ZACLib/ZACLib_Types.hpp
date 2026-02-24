@@ -3,8 +3,8 @@
 //
 
 // ReSharper disable CppNonExplicitConvertingConstructor
-#ifndef ZACLIB_TOOLS_HPP
-#define ZACLIB_TOOLS_HPP
+#ifndef ZACLIB_TYPES_HPP
+#define ZACLIB_TYPES_HPP
 
 #if __cplusplus >= 201703L
     #include <string_view>
@@ -69,4 +69,4 @@ namespace ZACLib {
     };
 }
 
-#endif //ZACLIB_TOOLS_HPP
+#endif //ZACLIB_TYPES_HPP
