@@ -3,8 +3,7 @@ project(ZACLib_Example)
 
 set(CMAKE_CXX_STANDARD 11)
 
-add_library(ZACLib STATIC "ZACLib/ZACLib.cpp")
-target_include_directories(ZACLib PUBLIC "ZACLib")
+add_subdirectory(ZACLib)
 
-add_executable(${CMAKE_PROJECT_NAME} main.cpp)
+add_executable(${CMAKE_PROJECT_NAME} examples/cross/Replace.cpp)
 target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE ZACLib)

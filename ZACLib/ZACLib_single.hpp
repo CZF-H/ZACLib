@@ -22,13 +22,14 @@
 #define ZACLIB_TYPES_HPP
 
 #if __cplusplus >= 201703L
-    #include <string_view>
+#include <string_view>
 #else
-    #include <cstring>
+#include <cstring>
 #endif
 
 #include <string>
 #include <array>
+#include <limits>
 
 
 namespace ZACLib {
@@ -38,12 +39,13 @@ namespace ZACLib {
     class ZAC_SV {
         const char* m_data;
         const size_t m_size;
+
     public:
         ZAC_SV() : m_data(nullptr),
                    m_size(0) {}
 
         ZAC_SV(const char* d, const size_t s) : m_data(d),
-                                          m_size(s) {}
+                                                m_size(s) {}
 
         ZAC_SV(const std::string& s) : m_data(s.c_str()),
                                        m_size(s.size()) {} // 模仿std::string_view，不禁止隐式构造
@@ -75,11 +77,12 @@ namespace ZACLib {
     struct Node {
         std::array<int, 256> next{};
         int fail;
-        int output_id;
+        static constexpr size_t kInvalidOutput = std::numeric_limits<size_t>::max();
+        size_t output_id;
         size_t match_len;
 
         Node() : fail(0),
-                 output_id(-1),
+                 output_id(kInvalidOutput),
                  match_len(0) { next.fill(-1); }
     };
 }
@@ -99,6 +102,7 @@ namespace ZACLib {
 
         void AddRule(const ZAC_SV& from, const ZAC_SV& to) {
             if (from.empty()) return;
+            if (from.size() > max_rule_len) max_rule_len = from.size();
             int node = 0;
             for (const char i : from) {
                 const auto c = static_cast<unsigned char>(i);
@@ -150,26 +154,91 @@ namespace ZACLib {
         std::string Do(const ZAC_SV& input) const {
             std::string result;
             result.reserve(input.size());
-            int state = 0;
-            size_t i = 0;
-            while (i < input.size()) {
-                const auto c = static_cast<unsigned char>(input[i]);
-                state = trie[state].next[c];
-                if (trie[state].output_id != -1) {
-                    result.append(outputs[trie[state].output_id]);
-                    i += trie[state].match_len;
-                    state = 0;
-                } else {
-                    result.push_back(input[i]);
-                    ++i;
-                }
+
+            if (input.empty()) return result;
+            if (max_rule_len == 0) {
+                result.append(input.data(), input.size());
+                return result;
             }
+
+            const auto invalid_output = Node::kInvalidOutput;
+            const size_t ring_size = max_rule_len + 1;
+            std::vector<size_t> pending_start(ring_size, invalid_output);
+            std::vector<size_t> pending_len(ring_size, 0);
+            std::vector<size_t> pending_output(ring_size, invalid_output);
+
+            auto get_best = [&](const size_t start, size_t& best_len, size_t& best_output) {
+                const size_t idx = start % ring_size;
+                if (pending_start[idx] == start) {
+                    best_len = pending_len[idx];
+                    best_output = pending_output[idx];
+                } else {
+                    best_len = 0;
+                    best_output = invalid_output;
+                }
+            };
+
+            auto set_best = [&](const size_t start, const size_t len, const size_t output_id) {
+                const size_t idx = start % ring_size;
+                if (pending_start[idx] != start) {
+                    pending_start[idx] = start;
+                    pending_len[idx] = 0;
+                    pending_output[idx] = invalid_output;
+                }
+                if (len > pending_len[idx]) {
+                    pending_len[idx] = len;
+                    pending_output[idx] = output_id;
+                }
+            };
+
+            int state = 0;
+            size_t last_pos = 0;
+            size_t cursor = 0;
+
+            auto emit_until = [&](const size_t upper_bound) {
+                while (cursor < upper_bound) {
+                    size_t best_len = 0;
+                    size_t best_output = invalid_output;
+                    get_best(cursor, best_len, best_output);
+                    if (best_len == 0) {
+                        ++cursor;
+                        continue;
+                    }
+
+                    result.append(input.data() + last_pos, cursor - last_pos);
+                    result.append(outputs[best_output]);
+                    cursor += best_len;
+                    last_pos = cursor;
+                }
+            };
+
+            for (size_t i = 0; i < input.size(); ++i) {
+                const unsigned char c = input[i];
+                state = trie[state].next[c];
+
+                if (trie[state].output_id != invalid_output) {
+                    const size_t match_len = trie[state].match_len;
+                    const size_t match_start = i + 1 - match_len;
+                    set_best(match_start, match_len, trie[state].output_id);
+                }
+
+                const size_t finalize_before = (i + 1 > max_rule_len) ? (i + 1 - max_rule_len) : 0;
+                emit_until(finalize_before);
+            }
+
+            emit_until(input.size());
+
+            if (last_pos < input.size()) {
+                result.append(input.data() + last_pos, input.size() - last_pos);
+            }
+
             return result;
         }
 
     private:
         std::vector<Node> trie{Node{}};
         std::vector<std::string> outputs;
+        size_t max_rule_len = 0;
     };
 
 
@@ -235,8 +304,8 @@ namespace ZACLib {
             for (size_t i = 0; i < input.size(); ++i) {
                 const auto c = static_cast<unsigned char>(input[i]);
                 state = trie[state].next[c];
-                if (trie[state].output_id != -1) {
-                    result.push_back(Match{i + 1 - trie[state].match_len, trie[state].match_len, static_cast<size_t>(trie[state].output_id)});
+                if (trie[state].output_id != Node::kInvalidOutput) {
+                    result.push_back(Match{i + 1 - trie[state].match_len, trie[state].match_len, trie[state].output_id});
                 }
             }
             return result;
@@ -278,7 +347,8 @@ namespace ZACLib {
             }
 
             while (!q.empty()) {
-                const int u = q.front(); q.pop();
+                const int u = q.front();
+                q.pop();
                 for (int c = 0; c < 256; ++c) {
                     int v = trie[u].next[c];
                     if (v != -1) {
@@ -298,12 +368,13 @@ namespace ZACLib {
 
                 int s = state;
                 while (s != 0) {
-                    if (trie[s].output_id != -1) return true;
+                    if (trie[s].output_id != Node::kInvalidOutput) return true;
                     s = trie[s].fail;
                 }
             }
             return false;
         }
+
     private:
         std::vector<Node> trie{Node{}};
     };
