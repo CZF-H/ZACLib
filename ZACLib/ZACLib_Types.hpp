@@ -22,7 +22,7 @@ namespace ZACLib {
     #else
     class ZAC_SV {
         const char* m_data;
-        std::size_t m_size;
+        const size_t m_size;
     public:
         ZAC_SV() : m_data(nullptr),
                    m_size(0) {}
@@ -40,9 +40,20 @@ namespace ZACLib {
             return m_data;
         }
 
-        const std::size_t& size() const noexcept {
+        std::size_t size() const noexcept {
             return m_size;
         }
+
+        bool empty() const noexcept {
+            return m_size == 0;
+        }
+
+        const char* begin() const { return m_data; }
+        const char* end() const { return m_data + m_size; }
+        const char* rbegin() const { return m_data + m_size - 1; }
+        const char* rend() const { return m_data - 1; }
+        const char* cbegin() const { return m_data; }
+        const char* cend() const { return m_data + m_size; }
 
         const char& operator[](const size_t i) const { return m_data[i]; }
     };

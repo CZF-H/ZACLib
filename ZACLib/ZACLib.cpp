@@ -17,10 +17,10 @@ namespace ZACLib {
     }
 
     void Replace::AddRule(const ZAC_SV& from, const ZAC_SV& to) {
-        if (from.size() == 0) return;
+        if (from.empty()) return;
         int node = 0;
-        for (size_t i = 0; i < from.size(); ++i) {
-            auto c = static_cast<unsigned char>(from[i]);
+        for (const char i : from) {
+            const auto c = static_cast<unsigned char>(i);
             if (trie[node].next[c] == -1) {
                 trie[node].next[c] = trie.size(); // NOLINT(*-narrowing-conversions)
                 trie.emplace_back();
@@ -54,7 +54,7 @@ namespace ZACLib {
         }
 
         while (!q.empty()) {
-            int u = q.front();
+            const int u = q.front();
             q.pop();
             for (int c = 0; c < 256; ++c) {
                 int v = trie[u].next[c];
@@ -82,7 +82,7 @@ namespace ZACLib {
         int state = 0;
         size_t i = 0;
         while (i < input.size()) {
-            auto c = static_cast<unsigned char>(input[i]);
+            const auto c = static_cast<unsigned char>(input[i]);
             state = trie[state].next[c];
 
             if (trie[state].output_id != -1) {
@@ -104,10 +104,10 @@ namespace ZACLib {
     }
 
     void Search::AddRule(const ZAC_SV& from) {
-        if (from.size() == 0) return;
+        if (from.empty()) return;
         int node = 0;
-        for (size_t i = 0; i < from.size(); ++i) {
-            auto c = static_cast<unsigned char>(from[i]);
+        for (const char i : from) {
+            const auto c = static_cast<unsigned char>(i);
             if (trie[node].next[c] == -1) {
                 trie[node].next[c] = trie.size(); // NOLINT(*-narrowing-conversions)
                 trie.emplace_back();
@@ -133,7 +133,7 @@ namespace ZACLib {
         }
 
         while (!q.empty()) {
-            int u = q.front();
+            const int u = q.front();
             q.pop();
             for (int c = 0; c < 256; ++c) {
                 int v = trie[u].next[c];
@@ -158,7 +158,7 @@ namespace ZACLib {
         std::vector<Match> result;
         int state = 0;
         for (size_t i = 0; i < input.size(); ++i) {
-            auto c = static_cast<unsigned char>(input[i]);
+            const auto c = static_cast<unsigned char>(input[i]);
             state = trie[state].next[c];
 
             if (trie[state].output_id != -1) {
@@ -178,10 +178,9 @@ namespace ZACLib {
     Has::Has() { trie.emplace_back(); }
 
     void Has::AddRule(const ZAC_SV& from) {
-        if (from.size() == 0) return;
+        if (from.empty()) return;
         int node = 0;
-        for (size_t i = 0; i < from.size(); ++i) {
-            unsigned char c = from[i];
+        for (const unsigned char c : from) {
             if (trie[node].next[c] == -1) {
                 trie[node].next[c] = trie.size(); // NOLINT(*-narrowing-conversions)
                 trie.emplace_back();
@@ -219,8 +218,7 @@ namespace ZACLib {
 
     bool Has::Do(const ZAC_SV& input) const {
         int state = 0;
-        for (size_t i = 0; i < input.size(); ++i) {
-            unsigned char c = input[i];
+        for (const unsigned char c : input) {
             state = trie[state].next[c];
 
             int s = state;
