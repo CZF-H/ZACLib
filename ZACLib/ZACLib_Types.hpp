@@ -31,10 +31,10 @@ namespace ZACLib {
                                           m_size(s) {}
 
         ZAC_SV(const std::string& s) : m_data(s.c_str()),
-                                       m_size(s.size()) {}
+                                       m_size(s.size()) {} // 模仿std::string_view，不禁止隐式构造
 
         ZAC_SV(const char* d) : m_data(d),
-                                m_size(d ? std::strlen(d) : 0) {}
+                                m_size(d ? std::strlen(d) : 0) {} // 模仿std::string_view，不禁止隐式构造
 
         const char* data() const noexcept {
             return m_data;
