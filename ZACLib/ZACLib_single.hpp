@@ -29,6 +29,7 @@
 
 #include <string>
 #include <array>
+#include <limits>
 
 
 namespace ZACLib {
@@ -76,11 +77,12 @@ namespace ZACLib {
     struct Node {
         std::array<int, 256> next{};
         int fail;
-        int output_id;
+        static constexpr size_t kInvalidOutput = std::numeric_limits<size_t>::max();
+        size_t output_id;
         size_t match_len;
 
         Node() : fail(0),
-                 output_id(-1),
+                 output_id(kInvalidOutput),
                  match_len(0) { next.fill(-1); }
     };
 }
@@ -155,7 +157,7 @@ namespace ZACLib {
             if (input.empty()) return result;
 
             int state = 0;
-            const auto invalid_output = static_cast<size_t>(-1);
+            const auto invalid_output = Node::kInvalidOutput;
             std::vector<size_t> best_len(input.size(), 0);
             std::vector<size_t> best_output(input.size(), invalid_output);
 
@@ -163,12 +165,12 @@ namespace ZACLib {
                 const unsigned char c = input[i];
                 state = trie[state].next[c];
 
-                if (trie[state].output_id != -1) {
+                if (trie[state].output_id != Node::kInvalidOutput) {
                     const size_t match_len = trie[state].match_len;
                     const size_t match_start = i + 1 - match_len;
                     if (match_len > best_len[match_start]) {
                         best_len[match_start] = match_len;
-                        best_output[match_start] = static_cast<size_t>(trie[state].output_id);
+                        best_output[match_start] = trie[state].output_id;
                     }
                 }
             }
@@ -262,8 +264,8 @@ namespace ZACLib {
             for (size_t i = 0; i < input.size(); ++i) {
                 const auto c = static_cast<unsigned char>(input[i]);
                 state = trie[state].next[c];
-                if (trie[state].output_id != -1) {
-                    result.push_back(Match{i + 1 - trie[state].match_len, trie[state].match_len, static_cast<size_t>(trie[state].output_id)});
+                if (trie[state].output_id != Node::kInvalidOutput) {
+                    result.push_back(Match{i + 1 - trie[state].match_len, trie[state].match_len, trie[state].output_id});
                 }
             }
             return result;
@@ -326,7 +328,7 @@ namespace ZACLib {
 
                 int s = state;
                 while (s != 0) {
-                    if (trie[s].output_id != -1) return true;
+                    if (trie[s].output_id != Node::kInvalidOutput) return true;
                     s = trie[s].fail;
                 }
             }

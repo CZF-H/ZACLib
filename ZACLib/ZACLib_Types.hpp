@@ -14,6 +14,7 @@
 
 #include <string>
 #include <array>
+#include <limits>
 
 
 namespace ZACLib {
@@ -60,11 +61,12 @@ namespace ZACLib {
     struct Node {
         std::array<int, 256> next{};
         int fail;
-        int output_id;
+        static constexpr size_t kInvalidOutput = std::numeric_limits<size_t>::max();
+        size_t output_id;
         size_t match_len;
 
         Node() : fail(0),
-                 output_id(-1),
+                 output_id(kInvalidOutput),
                  match_len(0) { next.fill(-1); }
     };
 }
