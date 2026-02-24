@@ -5,8 +5,8 @@
 ---
 
 ![C++](https://img.shields.io/badge/language-C++-blue)
-![C++11](https://img.shields.io/badge/C++-C++11-green)
-![License](https://img.shields.io/badge/license-MIT-lightgrey)
+![C++](https://img.shields.io/badge/C++-C++11%2B-brightgreen)
+![License](https://img.shields.io/badge/license-Apache%202.0-orange)
 
 ## 功能模块
 
