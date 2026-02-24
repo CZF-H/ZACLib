@@ -22,9 +22,9 @@
 #define ZACLIB_TYPES_HPP
 
 #if __cplusplus >= 201703L
-    #include <string_view>
+#include <string_view>
 #else
-    #include <cstring>
+#include <cstring>
 #endif
 
 #include <string>
@@ -38,12 +38,13 @@ namespace ZACLib {
     class ZAC_SV {
         const char* m_data;
         const size_t m_size;
+
     public:
         ZAC_SV() : m_data(nullptr),
                    m_size(0) {}
 
         ZAC_SV(const char* d, const size_t s) : m_data(d),
-                                          m_size(s) {}
+                                                m_size(s) {}
 
         ZAC_SV(const std::string& s) : m_data(s.c_str()),
                                        m_size(s.size()) {} // 模仿std::string_view，不禁止隐式构造
@@ -150,20 +151,29 @@ namespace ZACLib {
         std::string Do(const ZAC_SV& input) const {
             std::string result;
             result.reserve(input.size());
+
             int state = 0;
-            size_t i = 0;
-            while (i < input.size()) {
-                const auto c = static_cast<unsigned char>(input[i]);
+            size_t last_pos = 0;
+
+            for (size_t i = 0; i < input.size(); ++i) {
+                const unsigned char c = input[i];
                 state = trie[state].next[c];
+
                 if (trie[state].output_id != -1) {
-                    result.append(outputs[trie[state].output_id]);
-                    i += trie[state].match_len;
-                    state = 0;
-                } else {
-                    result.push_back(input[i]);
-                    ++i;
+                    const size_t match_len = trie[state].match_len;
+                    const size_t output_id = trie[state].output_id;
+
+                    result.append(input.data() + last_pos, i + 1 - match_len - last_pos);
+                    result.append(outputs[output_id]);
+
+                    last_pos = i + 1;
                 }
             }
+
+            if (last_pos < input.size()) {
+                result.append(input.data() + last_pos, input.size() - last_pos);
+            }
+
             return result;
         }
 
@@ -278,7 +288,8 @@ namespace ZACLib {
             }
 
             while (!q.empty()) {
-                const int u = q.front(); q.pop();
+                const int u = q.front();
+                q.pop();
                 for (int c = 0; c < 256; ++c) {
                     int v = trie[u].next[c];
                     if (v != -1) {
@@ -304,6 +315,7 @@ namespace ZACLib {
             }
             return false;
         }
+
     private:
         std::vector<Node> trie{Node{}};
     };

@@ -80,21 +80,27 @@ namespace ZACLib {
         result.reserve(input.size());
 
         int state = 0;
-        size_t i = 0;
-        while (i < input.size()) {
-            const auto c = static_cast<unsigned char>(input[i]);
+        size_t last_pos = 0;
+
+        for (size_t i = 0; i < input.size(); ++i) {
+            const unsigned char c = input[i];
             state = trie[state].next[c];
 
             if (trie[state].output_id != -1) {
-                const std::string& rep = outputs[trie[state].output_id];
-                result.append(rep);
-                i += trie[state].match_len;
-                state = 0;
-            } else {
-                result.push_back(input[i]);
-                ++i;
+                const size_t match_len = trie[state].match_len;
+                const size_t output_id = trie[state].output_id;
+
+                result.append(input.data() + last_pos, i + 1 - match_len - last_pos);
+                result.append(outputs[output_id]);
+
+                last_pos = i + 1;
             }
         }
+
+        if (last_pos < input.size()) {
+            result.append(input.data() + last_pos, input.size() - last_pos);
+        }
+
         return result;
     }
 
