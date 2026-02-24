@@ -79,11 +79,12 @@ namespace ZACLib {
         std::string result;
         result.reserve(input.size());
 
+        if (input.empty()) return result;
+
         int state = 0;
-        size_t last_pos = 0;
-        size_t longest_len = 0;
-        auto longest_output = static_cast<size_t>(-1);
-        size_t longest_end = 0;
+        const auto invalid_output = static_cast<size_t>(-1);
+        std::vector<size_t> best_len(input.size(), 0);
+        std::vector<size_t> best_output(input.size(), invalid_output);
 
         for (size_t i = 0; i < input.size(); ++i) {
             const unsigned char c = input[i];
@@ -92,24 +93,29 @@ namespace ZACLib {
             int s = state;
             while (s != 0) {
                 if (trie[s].output_id != -1) {
-                    if (trie[s].match_len > longest_len) {
-                        longest_len = trie[s].match_len;
-                        longest_output = trie[s].output_id;
-                        longest_end = i;
+                    const size_t match_len = trie[s].match_len;
+                    const size_t match_start = i + 1 - match_len;
+                    if (match_len > best_len[match_start]) {
+                        best_len[match_start] = match_len;
+                        best_output[match_start] = static_cast<size_t>(trie[s].output_id);
                     }
                 }
                 s = trie[s].fail;
             }
+        }
 
-            if (longest_end + 1 - longest_len >= last_pos && longest_len > 0) {
-                size_t match_start = longest_end + 1 - longest_len;
-                result.append(input.data() + last_pos, match_start - last_pos);
-                result.append(outputs[longest_output]);
-                last_pos = longest_end + 1;
-
-                longest_len = 0;
-                longest_output = static_cast<size_t>(-1);
+        size_t last_pos = 0;
+        for (size_t i = 0; i < input.size();) {
+            if (best_len[i] == 0) {
+                ++i;
+                continue;
             }
+
+            result.append(input.data() + last_pos, i - last_pos);
+            result.append(outputs[best_output[i]]);
+
+            i += best_len[i];
+            last_pos = i;
         }
 
         if (last_pos < input.size()) {
