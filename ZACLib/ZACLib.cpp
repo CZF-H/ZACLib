@@ -81,21 +81,34 @@ namespace ZACLib {
 
         int state = 0;
         size_t last_pos = 0;
+        size_t longest_len = 0;
+        auto longest_output = static_cast<size_t>(-1);
+        size_t longest_end = 0;
 
         for (size_t i = 0; i < input.size(); ++i) {
             const unsigned char c = input[i];
             state = trie[state].next[c];
 
-            if (trie[state].output_id != -1) {
-                const size_t match_len = trie[state].match_len;
-                const size_t match_start = i + 1 - match_len;
-
-                if (match_start >= last_pos) {
-                    const size_t output_id = trie[state].output_id;
-                    result.append(input.data() + last_pos, match_start - last_pos);
-                    result.append(outputs[output_id]);
-                    last_pos = i + 1;
+            int s = state;
+            while (s != 0) {
+                if (trie[s].output_id != -1) {
+                    if (trie[s].match_len > longest_len) {
+                        longest_len = trie[s].match_len;
+                        longest_output = trie[s].output_id;
+                        longest_end = i;
+                    }
                 }
+                s = trie[s].fail;
+            }
+
+            if (longest_end + 1 - longest_len >= last_pos && longest_len > 0) {
+                size_t match_start = longest_end + 1 - longest_len;
+                result.append(input.data() + last_pos, match_start - last_pos);
+                result.append(outputs[longest_output]);
+                last_pos = longest_end + 1;
+
+                longest_len = 0;
+                longest_output = static_cast<size_t>(-1);
             }
         }
 

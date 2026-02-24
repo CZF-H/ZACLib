@@ -162,11 +162,9 @@ namespace ZACLib {
                 const unsigned char c = input[i];
                 state = trie[state].next[c];
 
-                // 检查当前状态及 fail 链上是否有匹配
                 int s = state;
                 while (s != 0) {
                     if (trie[s].output_id != -1) {
-                        // 如果匹配长度比当前记录的最长匹配长，就更新
                         if (trie[s].match_len > longest_len) {
                             longest_len = trie[s].match_len;
                             longest_output = trie[s].output_id;
@@ -176,20 +174,17 @@ namespace ZACLib {
                     s = trie[s].fail;
                 }
 
-                // 如果当前匹配已经到达最长匹配结束位置，进行替换
                 if (longest_end + 1 - longest_len >= last_pos && longest_len > 0) {
                     size_t match_start = longest_end + 1 - longest_len;
                     result.append(input.data() + last_pos, match_start - last_pos);
                     result.append(outputs[longest_output]);
                     last_pos = longest_end + 1;
 
-                    // 重置最长匹配
                     longest_len = 0;
-                    longest_output = size_t(-1);
+                    longest_output = static_cast<size_t>(-1);
                 }
             }
 
-            // append 剩余字符
             if (last_pos < input.size()) {
                 result.append(input.data() + last_pos, input.size() - last_pos);
             }
