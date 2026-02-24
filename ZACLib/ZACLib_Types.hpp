@@ -61,7 +61,8 @@ namespace ZACLib {
     struct Node {
         std::array<int, 256> next{};
         int fail;
-        static constexpr size_t kInvalidOutput = std::numeric_limits<size_t>::max();
+        // ReSharper disable once CppVariableCanBeMadeConstexpr
+        static const auto kInvalidOutput = std::numeric_limits<size_t>::max();
         size_t output_id;
         size_t match_len;
 
