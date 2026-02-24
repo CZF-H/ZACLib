@@ -2,16 +2,6 @@
 // Created by wanjiangzhi on 2026/2/24.
 //
 
-struct Match {
-    size_t pos;       // 匹配起始位置
-    size_t len;       // 匹配长度
-    size_t output_id; // 输出对应规则索引
-};
-···
-
-示例代码:
-
-```cpp
 #include "ZACLib.hpp"
 #include <iostream>
 
