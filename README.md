@@ -61,7 +61,7 @@ struct Match {
     size_t len;       // 匹配长度
     size_t output_id; // 输出对应规则索引
 };
-···
+```
 
 示例代码:
 
