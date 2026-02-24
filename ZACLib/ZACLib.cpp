@@ -88,12 +88,14 @@ namespace ZACLib {
 
             if (trie[state].output_id != -1) {
                 const size_t match_len = trie[state].match_len;
-                const size_t output_id = trie[state].output_id;
+                const size_t match_start = i + 1 - match_len;
 
-                result.append(input.data() + last_pos, i + 1 - match_len - last_pos);
-                result.append(outputs[output_id]);
-
-                last_pos = i + 1;
+                if (match_start >= last_pos) {
+                    const size_t output_id = trie[state].output_id;
+                    result.append(input.data() + last_pos, match_start - last_pos);
+                    result.append(outputs[output_id]);
+                    last_pos = i + 1;
+                }
             }
         }
 
