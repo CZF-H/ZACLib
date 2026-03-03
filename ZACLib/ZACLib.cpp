@@ -167,6 +167,7 @@ namespace ZACLib {
 
     void Search::AddRule(const ZAC_SV& from) {
         if (from.empty()) return;
+        built = false;
         int node = 0;
         for (const char i : from) {
             const auto c = static_cast<unsigned char>(i);
@@ -185,6 +186,7 @@ namespace ZACLib {
     }
 
     void Search::Build() {
+        built = true;
         std::queue<int> q;
         for (int c = 0; c < 256; ++c) {
             int nxt = trie[0].next[c];
@@ -223,13 +225,17 @@ namespace ZACLib {
         int state = 0;
         for (size_t i = 0; i < input.size(); ++i) {
             const auto c = static_cast<unsigned char>(input[i]);
-            while (state != 0 && trie[state].next[c] == -1) {
-                state = trie[state].fail;
-            }
-            if (trie[state].next[c] != -1) {
-                state = trie[state].next[c];
+            if (!built) {
+                while (state != 0 && trie[state].next[c] == -1) {
+                    state = trie[state].fail;
+                }
+                if (trie[state].next[c] != -1) {
+                    state = trie[state].next[c];
+                } else {
+                    state = 0;
+                }
             } else {
-                state = 0;
+                state = trie[state].next[c];
             }
 
             if (trie[state].output_id != Node::kInvalidOutput) {
@@ -250,6 +256,7 @@ namespace ZACLib {
 
     void Has::AddRule(const ZAC_SV& from) {
         if (from.empty()) return;
+        built = false;
         int node = 0;
         for (const unsigned char c : from) {
             if (trie[node].next[c] == -1) {
@@ -262,6 +269,7 @@ namespace ZACLib {
     }
 
     void Has::Build() {
+        built = true;
         std::queue<int> q;
         for (int c = 0; c < 256; ++c) {
             int nxt = trie[0].next[c];
@@ -290,7 +298,18 @@ namespace ZACLib {
     bool Has::Do(const ZAC_SV& input) const {
         int state = 0;
         for (const unsigned char c : input) {
-            state = trie[state].next[c];
+            if (!built) {
+                while (state != 0 && trie[state].next[c] == -1) {
+                    state = trie[state].fail;
+                }
+                if (trie[state].next[c] != -1) {
+                    state = trie[state].next[c];
+                } else {
+                    state = 0;
+                }
+            } else {
+                state = trie[state].next[c];
+            }
 
             int s = state;
             while (s != 0) {

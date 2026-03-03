@@ -44,6 +44,7 @@ namespace ZACLib {
     private:
         std::vector<Node> trie;
         std::vector<std::string> outputs;
+        bool built = false;
         size_t max_rule_len = 0;
     };
 
@@ -56,6 +57,7 @@ namespace ZACLib {
 
     private:
         std::vector<Node> trie;
+        bool built = false;
     };
 
 } // namespace ZACLIB
