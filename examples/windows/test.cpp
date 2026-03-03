@@ -1,55 +1,55 @@
 #include <iostream>
 
-#include "windows.h"
+/*#include "windows.h"*/
 #include "../../ZACLib/ZACLib_single.hpp"
+#include <unordered_map>
+#include <string>
+#include <iostream>
+
 
 int main() {
-    SetConsoleCP(CP_UTF8);
-    SetConsoleOutputCP(CP_UTF8);
+    /*SetConsoleCP(CP_UTF8);
+    SetConsoleOutputCP(CP_UTF8);*/
 
-    static ZACLib::Replace PickupReplacer;
-    static bool InitPickupReplacer = [] {
-        auto& r = PickupReplacer;
+    ZACLib::Search GrenadeSearcher;
 
-        // ===== 纯删除规则 =====
-        r.AddRemoveRule("BP_");
-        r.AddRemoveRule("Other_");
-        r.AddRemoveRule("Pickup_");     // 改成正确大小写
-        r.AddRemoveRule("PickUp_");     // 如果两种都有就都加
-        r.AddRemoveRule("_Pickup");
-        r.AddRemoveRule("_Wrapper");
-        r.AddRemoveRule("WEP_");
-        r.AddRemoveRule("_Weapon");
+    // 添加规则
+    GrenadeSearcher.AddRule("FragGrenade");
+    GrenadeSearcher.AddRule("SmokeBomb");
+    GrenadeSearcher.AddRule("BurnGrenade");
+    GrenadeSearcher.AddRule("StunGrenade");
 
-        // ===== 等级 =====
-        r.AddReplaceRule("Lv1_B", "Lv1");
-        r.AddReplaceRule("Lv2_B", "Lv2");
-        r.AddReplaceRule("Lv3_B", "Lv3");
+    // 构建 Trie
+    GrenadeSearcher.Build();
 
-        // ===== 长规则优先 =====
-        r.AddReplaceRule("MZJ_QX", "Holographic Sight");
-        r.AddReplaceRule("MZJ_HD", "RedDot Sight");
-        r.AddReplaceRule("MZJ_CM", "Side Scope");
-        r.AddReplaceRule("QT_A", "TacticalStock");
-        r.AddReplaceRule("QT_H", "HeavyStock");
-        r.AddReplaceRule("GL_A", "AutomaticBolt");
-        r.AddReplaceRule("DB_A", "MG-SideShield");
+    std::vector<std::string> testClasses = {"BP_Projectile_FragGrenade_C_2", "SmokeBombY", "RecycledGrenade"};
+    ZACLib::ZAC_SV input;
 
-        // ===== 再加短规则 =====
-        r.AddReplaceRule("MZJ", "Scope");
-        r.AddReplaceRule("QT", "Stock");
-        r.AddReplaceRule("QK", "Muzzle");
-        r.AddReplaceRule("WB", "Grip");
-        r.AddReplaceRule("DJ", "Magazine");
-        r.AddReplaceRule("ZDD", "BulletPouch");
+    const std::unordered_map<std::string_view, std::string> GrenadeType = {
+        {"FragGrenade", "Grenade.FragGrenade"},
+        {"SmokeBomb", "Grenade.SmokeBomb"},
+        {"BurnGrenade", "Grenade.BurnGrenade"},
+        {"StunGrenade", "Grenade.StunGrenade"},
+    };
 
-        r.AddReplaceRule("Shoulei", "FragGrenade");
+    for (auto& ClassName : testClasses) {
+        if (ClassName.find("Recycled") != std::string::npos) continue;
 
-        r.Build();
-        return true;
-    }();
+        std::string GrenadeName = "Grenade.Default";
 
-    std::cout << PickupReplacer.Do("BP_PickUp_Shoulei_C_1") << std::endl;
+        // 使用 ZACLib::Search
+        auto matches = GrenadeSearcher.Do(ClassName);
+        for (auto &m : matches) {
+            auto key = ClassName.substr(m.pos, m.len);
+            auto it = GrenadeType.find(key);
+            if (it != GrenadeType.end()) {
+                GrenadeName = it->second;
+                break;
+            }
+        }
+
+        std::cout << ClassName << " -> " << GrenadeName << "\n";
+    }
 
     return 0;
 }

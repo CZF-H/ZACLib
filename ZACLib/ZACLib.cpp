@@ -218,10 +218,19 @@ namespace ZACLib {
 
     std::vector<Search::Match> Search::Do(const ZAC_SV& input) const {
         std::vector<Match> result;
+        if (trie.empty()) return result;
+
         int state = 0;
         for (size_t i = 0; i < input.size(); ++i) {
             const auto c = static_cast<unsigned char>(input[i]);
-            state = trie[state].next[c];
+            while (state != 0 && trie[state].next[c] == -1) {
+                state = trie[state].fail;
+            }
+            if (trie[state].next[c] != -1) {
+                state = trie[state].next[c];
+            } else {
+                state = 0;
+            }
 
             if (trie[state].output_id != Node::kInvalidOutput) {
                 result.push_back(
