@@ -57,6 +57,7 @@ namespace ZACLib {
 
     private:
         std::vector<Node> trie;
+        std::vector<std::string> outputs;
         bool built = false;
     };
 

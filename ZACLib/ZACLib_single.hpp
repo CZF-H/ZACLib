@@ -30,6 +30,7 @@
 #include <string>
 #include <array>
 #include <limits>
+#include <cstring>
 
 
 namespace ZACLib {
@@ -272,7 +273,6 @@ namespace ZACLib {
         }
 
         void Build() {
-            built = true;
             std::queue<int> q;
             for (int c = 0; c < 256; ++c) {
                 int nxt = trie[0].next[c];
@@ -299,27 +299,38 @@ namespace ZACLib {
                     }
                 }
             }
+            built = true;
         }
 
         std::vector<Match> Do(const ZAC_SV& input) const {
             std::vector<Match> result;
             if (trie.empty()) return result;
 
+            if (!built) {
+                for (size_t i = 0; i < input.size(); ++i) {
+                    size_t best_len = 0;
+                    size_t best_rule = Node::kInvalidOutput;
+                    for (size_t rule_id = 0; rule_id < outputs.size(); ++rule_id) {
+                        const auto& rule = outputs[rule_id];
+                        const size_t len = rule.size();
+                        if (len == 0 || len > i + 1) continue;
+                        if (std::memcmp(input.data() + i + 1 - len, rule.data(), len) == 0 && len > best_len) {
+                            best_len = len;
+                            best_rule = rule_id;
+                        }
+                    }
+
+                    if (best_rule != Node::kInvalidOutput) {
+                        result.push_back(Match{i + 1 - best_len, best_len, best_rule});
+                    }
+                }
+                return result;
+            }
+
             int state = 0;
             for (size_t i = 0; i < input.size(); ++i) {
                 const auto c = static_cast<unsigned char>(input[i]);
-                if (!built) {
-                    while (state != 0 && trie[state].next[c] == -1) {
-                        state = trie[state].fail;
-                    }
-                    if (trie[state].next[c] != -1) {
-                        state = trie[state].next[c];
-                    } else {
-                        state = 0;
-                    }
-                } else {
-                    state = trie[state].next[c];
-                }
+                state = trie[state].next[c];
                 if (trie[state].output_id != Node::kInvalidOutput) {
                     result.push_back(
                         Match{
@@ -356,10 +367,10 @@ namespace ZACLib {
                 node = trie[node].next[c];
             }
             trie[node].output_id = 0;
+            outputs.emplace_back(from.data(), from.size());
         }
 
         void Build() {
-            built = true;
             std::queue<int> q;
             for (int c = 0; c < 256; ++c) {
                 int nxt = trie[0].next[c];
@@ -384,23 +395,24 @@ namespace ZACLib {
                     }
                 }
             }
+            built = true;
         }
 
         bool Do(const ZAC_SV& input) const {
+            if (!built) {
+                for (size_t i = 0; i < input.size(); ++i) {
+                    for (const auto& rule : outputs) {
+                        const size_t len = rule.size();
+                        if (len == 0 || len > i + 1) continue;
+                        if (std::memcmp(input.data() + i + 1 - len, rule.data(), len) == 0) return true;
+                    }
+                }
+                return false;
+            }
+
             int state = 0;
             for (const unsigned char c : input) {
-                if (!built) {
-                    while (state != 0 && trie[state].next[c] == -1) {
-                        state = trie[state].fail;
-                    }
-                    if (trie[state].next[c] != -1) {
-                        state = trie[state].next[c];
-                    } else {
-                        state = 0;
-                    }
-                } else {
-                    state = trie[state].next[c];
-                }
+                state = trie[state].next[c];
 
                 int s = state;
                 while (s != 0) {
@@ -413,6 +425,7 @@ namespace ZACLib {
 
     private:
         std::vector<Node> trie;
+        std::vector<std::string> outputs;
         bool built = false;
     };
 } // namespace ZACLIB
