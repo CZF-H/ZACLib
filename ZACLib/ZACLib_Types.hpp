@@ -19,6 +19,7 @@
 #include <string>
 #include <array>
 #include <limits>
+#include <stdexcept>
 
 #if defined(__CHAR_UNSIGNED__) || (defined(_CHAR_UNSIGNED) && _CHAR_UNSIGNED)
 #define CHAR_UNSIGNED
@@ -74,7 +75,7 @@ namespace ZACLib {
                                                 m_size(s.size()) {}
 
         ZAC_SV(const ZAC_CHAR* d) : m_data(d),
-                                    m_size(d ? std::strlen(ArmCastChar(d)) : 0) {}
+                                    m_size(d ? std::strlen(reinterpret_cast<const char*>(d)) : 0) {}
 
         #ifdef CHAR_UNSIGNED
         ZAC_SV(const char* d) : m_data(reinterpret_cast<const ZAC_CHAR*>(d)),
@@ -111,6 +112,13 @@ namespace ZACLib {
         size_type output_id;
         size_type match_len;
         static constexpr auto kInvalidOutput = std::numeric_limits<size_type>::max();
+
+        static value_type ToIndexOrThrow(const size_type value) {
+            if (value > static_cast<size_type>(std::numeric_limits<value_type>::max())) {
+                throw std::overflow_error("Trie node count exceeds Node::value_type range");
+            }
+            return static_cast<value_type>(value);
+        }
 
         Node() : fail(0),
                  output_id(kInvalidOutput),

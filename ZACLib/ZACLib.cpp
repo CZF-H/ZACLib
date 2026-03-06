@@ -22,16 +22,16 @@ namespace ZACLib {
         for (const ZAC_CHAR i : from) {
             const auto c = static_cast<unsigned char>(i);
             if (trie[node].next[c] == -1) {
-                trie[node].next[c] = static_cast<Node::value_type>(trie.size());
+                trie[node].next[c] = Node::ToIndexOrThrow(trie.size());
                 trie.emplace_back();
             }
             node = trie[node].next[c];
         }
 
         if (from.size() > trie[node].match_len) {
-            trie[node].output_id = static_cast<Node::value_type>(outputs.size());
+            trie[node].output_id = outputs.size();
             trie[node].match_len = from.size();
-            outputs.emplace_back(ArmCastChar(to.data()), to.size());
+            outputs.emplace_back(reinterpret_cast<const char*>(to.data()), to.size());
         }
     }
 
@@ -81,7 +81,7 @@ namespace ZACLib {
 
         if (input.empty()) return result;
         if (max_rule_len == 0) {
-            result.append(ArmCastChar(input.data()), input.size());
+            result.append(reinterpret_cast<const char*>(input.data()), input.size());
             return result;
         }
 
@@ -128,7 +128,7 @@ namespace ZACLib {
                     ++cursor;
                     continue;
                 }
-                result.append(ArmCastChar(input.data() + last_pos), cursor - last_pos);
+                result.append(reinterpret_cast<const char*>(input.data() + last_pos), cursor - last_pos);
                 result.append(outputs[best_output]);
                 cursor += best_len;
                 last_pos = cursor;
@@ -152,7 +152,7 @@ namespace ZACLib {
         emit_until(input.size());
 
         if (last_pos < input.size()) {
-            result.append(ArmCastChar(input.data() + last_pos), input.size() - last_pos);
+            result.append(reinterpret_cast<const char*>(input.data() + last_pos), input.size() - last_pos);
         }
 
         return result;
@@ -169,7 +169,7 @@ namespace ZACLib {
         for (const ZAC_CHAR i : from) {
             const auto c = static_cast<unsigned char>(i);
             if (trie[node].next[c] == -1) {
-                trie[node].next[c] = static_cast<Node::value_type>(trie.size());
+                trie[node].next[c] = Node::ToIndexOrThrow(trie.size());
                 trie.emplace_back();
             }
             node = trie[node].next[c];
@@ -179,7 +179,7 @@ namespace ZACLib {
 
             trie[node].output_id = outputs.size();
             trie[node].match_len = from.size();
-            outputs.emplace_back(ArmCastChar(from.data()), from.size());
+            outputs.emplace_back(reinterpret_cast<const char*>(from.data()), from.size());
         }
     }
 
@@ -252,7 +252,7 @@ namespace ZACLib {
         int node = 0;
         for (const unsigned char c : from) {
             if (trie[node].next[c] == -1) {
-                trie[node].next[c] = static_cast<Node::value_type>(trie.size());
+                trie[node].next[c] = Node::ToIndexOrThrow(trie.size());
                 trie.emplace_back();
             }
             node = trie[node].next[c];
