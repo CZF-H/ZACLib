@@ -5,19 +5,8 @@
 #include "ZACLib.hpp"
 #include <array>
 #include <queue>
-#include <stdexcept>
-#include <limits>
 
 namespace ZACLib {
-    namespace {
-        Node::value_type ToNodeIndexOrThrow(const size_t value) {
-            if (value > static_cast<size_t>(std::numeric_limits<Node::value_type>::max())) {
-                throw std::overflow_error("Trie node count exceeds Node::value_type range");
-            }
-            return static_cast<Node::value_type>(value);
-        }
-    }
-
     Replace::Replace() {
         trie.emplace_back();
     }
@@ -33,7 +22,7 @@ namespace ZACLib {
         for (const ZAC_CHAR i : from) {
             const auto c = static_cast<unsigned char>(i);
             if (trie[node].next[c] == -1) {
-                trie[node].next[c] = ToNodeIndexOrThrow(trie.size());
+                trie[node].next[c] = Node::ToIndexOrThrow(trie.size());
                 trie.emplace_back();
             }
             node = trie[node].next[c];
@@ -180,7 +169,7 @@ namespace ZACLib {
         for (const ZAC_CHAR i : from) {
             const auto c = static_cast<unsigned char>(i);
             if (trie[node].next[c] == -1) {
-                trie[node].next[c] = ToNodeIndexOrThrow(trie.size());
+                trie[node].next[c] = Node::ToIndexOrThrow(trie.size());
                 trie.emplace_back();
             }
             node = trie[node].next[c];
@@ -263,7 +252,7 @@ namespace ZACLib {
         int node = 0;
         for (const unsigned char c : from) {
             if (trie[node].next[c] == -1) {
-                trie[node].next[c] = ToNodeIndexOrThrow(trie.size());
+                trie[node].next[c] = Node::ToIndexOrThrow(trie.size());
                 trie.emplace_back();
             }
             node = trie[node].next[c];
