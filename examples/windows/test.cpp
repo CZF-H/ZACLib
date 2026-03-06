@@ -1,7 +1,7 @@
 #include <iostream>
 
 /*#include "windows.h"*/
-#include "../../ZACLib/ZACLib_single.hpp"
+#include "../../ZACLib/Deprecated/ZACLib_single.hpp"
 #include <unordered_map>
 #include <string>
 #include <iostream>
@@ -25,7 +25,7 @@ int main() {
     std::vector<std::string> testClasses = {"BP_Projectile_FragGrenade_C_2", "SmokeBombY", "RecycledGrenade"};
     ZACLib::ZAC_SV input;
 
-    const std::unordered_map<std::string_view, std::string> GrenadeType = {
+    const std::unordered_map<std::string, std::string> GrenadeType = {
         {"FragGrenade", "Grenade.FragGrenade"},
         {"SmokeBomb", "Grenade.SmokeBomb"},
         {"BurnGrenade", "Grenade.BurnGrenade"},

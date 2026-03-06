@@ -22,9 +22,9 @@
 #define ZACLIB_TYPES_HPP
 
 #if __cplusplus >= 201703L
-#include <string_view>
+    #include <string_view>
 #else
-#include <cstring>
+    #include <cstring>
 #endif
 
 #include <string>
@@ -63,13 +63,12 @@ namespace ZACLib {
     class ZAC_SV {
         const ZAC_CHAR* m_data;
         const size_t m_size;
-
     public:
         ZAC_SV() : m_data(nullptr),
                    m_size(0) {}
 
         ZAC_SV(const ZAC_CHAR* d, const size_t s) : m_data(d),
-                                                m_size(s) {}
+                                          m_size(s) {}
 
 #if defined(__ANDROID__) || defined(__arm__) || defined(__aarch64__)
         ZAC_SV(const char* d, const size_t s) : m_data(reinterpret_cast<const ZAC_CHAR*>(d)),
@@ -77,7 +76,7 @@ namespace ZACLib {
 #endif
 
         // ReSharper disable once CppRedundantCastExpression
-        ZAC_SV(const std::string& s) : m_data(reinterpret_cast<const ZAC_CHAR*>(s.c_str())),
+        ZAC_SV(const std::string& s) noexcept : m_data(reinterpret_cast<const ZAC_CHAR*>(s.data())),
                                        m_size(s.size()) {} // 模仿std::string_view，不禁止隐式构造
 
         ZAC_SV(const ZAC_CHAR* d) : m_data(d),
@@ -124,7 +123,6 @@ namespace ZACLib {
 }
 
 #endif //ZACLIB_TYPES_HPP
-
 // ZACLib_Types.hpp end
 
 namespace ZACLib {
