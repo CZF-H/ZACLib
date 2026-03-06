@@ -2,3 +2,5 @@ cmake-build*/
 **/cmake-build*/
 /.idea
 !/.idea/dictionaries
+
+**/localtest*/
