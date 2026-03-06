@@ -5,12 +5,12 @@ CXXFLAGS := -I./ \
 
 SRC := ZACLib.cpp
 OBJ := $(SRC:.cpp=.o)
-TARGET := ZACLib
+TARGET := libZACLib.a
 
 all: $(TARGET)
 
 $(TARGET): $(OBJ)
-	$(CXX) $(OBJ) -o $(TARGET)
+	ar rcs $@ $(OBJ)
 
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@

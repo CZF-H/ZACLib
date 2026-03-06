@@ -74,7 +74,7 @@ namespace ZACLib {
                                                 m_size(s.size()) {}
 
         ZAC_SV(const ZAC_CHAR* d) : m_data(d),
-                                    m_size(d ? std::strlen(ArmCastChar(d)) : 0) {}
+                                    m_size(d ? std::strlen(reinterpret_cast<const char*>(d)) : 0) {}
 
         #ifdef CHAR_UNSIGNED
         ZAC_SV(const char* d) : m_data(reinterpret_cast<const ZAC_CHAR*>(d)),
