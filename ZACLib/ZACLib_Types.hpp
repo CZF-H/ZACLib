@@ -7,7 +7,7 @@
 #define ZACLIB_TYPES_HPP
 
 #if __cplusplus >= 201703L
-#include HAS_STRING_VIEW
+#define HAS_STRING_VIEW
 #endif
 
 #ifdef HAS_STRING_VIEW
