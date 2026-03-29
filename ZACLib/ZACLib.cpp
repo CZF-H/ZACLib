@@ -2,7 +2,6 @@
 // Created by wanjiangzhi on 2026/2/24.
 //
 
-// ReSharper disable CppClassNeverUsed
 #include "ZACLib.hpp"
 #include <array>
 #include <queue>
@@ -13,26 +12,26 @@ namespace ZACLib {
     }
 
     void Replace::AddRule(const ZAC_SV& from) {
-        AddRule(from, ZAC_SV("", 0));
+        AddRule(from, ZAC_SV(""));
     }
 
     void Replace::AddRule(const ZAC_SV& from, const ZAC_SV& to) {
         if (from.empty()) return;
         if (from.size() > max_rule_len) max_rule_len = from.size();
         int node = 0;
-        for (const char i : from) {
+        for (const ZAC_CHAR i : from) {
             const auto c = static_cast<unsigned char>(i);
             if (trie[node].next[c] == -1) {
-                trie[node].next[c] = trie.size(); // NOLINT(*-narrowing-conversions)
+                trie[node].next[c] = Node::ToIndexOrThrow(trie.size());
                 trie.emplace_back();
             }
             node = trie[node].next[c];
         }
 
         if (from.size() > trie[node].match_len) {
-            trie[node].output_id = outputs.size(); // NOLINT(*-narrowing-conversions)
+            trie[node].output_id = outputs.size();
             trie[node].match_len = from.size();
-            outputs.emplace_back(to.data(), to.size());
+            outputs.emplace_back(reinterpret_cast<const char*>(to.data()), to.size());
         }
     }
 
@@ -62,7 +61,7 @@ namespace ZACLib {
                 if (v != -1) {
                     trie[v].fail = trie[trie[u].fail].next[c];
 
-                    int f = trie[v].fail;
+                    const int f = trie[v].fail;
                     if (trie[f].match_len > trie[v].match_len) {
                         trie[v].match_len = trie[f].match_len;
                         trie[v].output_id = trie[f].output_id;
@@ -82,11 +81,11 @@ namespace ZACLib {
 
         if (input.empty()) return result;
         if (max_rule_len == 0) {
-            result.append(input.data(), input.size());
+            result.append(reinterpret_cast<const char*>(input.data()), input.size());
             return result;
         }
 
-        const auto invalid_output = Node::kInvalidOutput;
+        constexpr auto invalid_output = Node::kInvalidOutput;
         const size_t ring_size = max_rule_len + 1;
         std::vector<size_t> pending_start(ring_size, invalid_output);
         std::vector<size_t> pending_len(ring_size, 0);
@@ -121,7 +120,7 @@ namespace ZACLib {
         size_t cursor = 0;
 
         auto emit_until = [&](const size_t upper_bound) {
-            while (cursor < upper_bound) {
+            while (cursor < upper_bound) { // NOLINT
                 size_t best_len = 0;
                 size_t best_output = invalid_output;
                 get_best(cursor, best_len, best_output);
@@ -129,8 +128,7 @@ namespace ZACLib {
                     ++cursor;
                     continue;
                 }
-
-                result.append(input.data() + last_pos, cursor - last_pos);
+                result.append(reinterpret_cast<const char*>(input.data() + last_pos), cursor - last_pos);
                 result.append(outputs[best_output]);
                 cursor += best_len;
                 last_pos = cursor;
@@ -138,7 +136,7 @@ namespace ZACLib {
         };
 
         for (size_t i = 0; i < input.size(); ++i) {
-            const unsigned char c = input[i];
+            const auto c = static_cast<unsigned char>(input[i]);
             state = trie[state].next[c];
 
             if (trie[state].output_id != invalid_output) {
@@ -154,7 +152,7 @@ namespace ZACLib {
         emit_until(input.size());
 
         if (last_pos < input.size()) {
-            result.append(input.data() + last_pos, input.size() - last_pos);
+            result.append(reinterpret_cast<const char*>(input.data() + last_pos), input.size() - last_pos);
         }
 
         return result;
@@ -168,19 +166,20 @@ namespace ZACLib {
     void Search::AddRule(const ZAC_SV& from) {
         if (from.empty()) return;
         int node = 0;
-        for (const char i : from) {
+        for (const ZAC_CHAR i : from) {
             const auto c = static_cast<unsigned char>(i);
             if (trie[node].next[c] == -1) {
-                trie[node].next[c] = trie.size(); // NOLINT(*-narrowing-conversions)
+                trie[node].next[c] = Node::ToIndexOrThrow(trie.size());
                 trie.emplace_back();
             }
             node = trie[node].next[c];
         }
 
         if (from.size() > trie[node].match_len) {
-            trie[node].output_id = outputs.size(); // NOLINT(*-narrowing-conversions)
+
+            trie[node].output_id = outputs.size();
             trie[node].match_len = from.size();
-            outputs.emplace_back(from.data(), from.size());
+            outputs.emplace_back(reinterpret_cast<const char*>(from.data()), from.size());
         }
     }
 
@@ -253,7 +252,7 @@ namespace ZACLib {
         int node = 0;
         for (const unsigned char c : from) {
             if (trie[node].next[c] == -1) {
-                trie[node].next[c] = trie.size(); // NOLINT(*-narrowing-conversions)
+                trie[node].next[c] = Node::ToIndexOrThrow(trie.size());
                 trie.emplace_back();
             }
             node = trie[node].next[c];

@@ -2,7 +2,6 @@
 // Created by wanjiangzhi on 2026/2/24.
 //
 
-// ReSharper disable CppNonExplicitConvertingConstructor
 #ifndef ZACLIB_HPP
 #define ZACLIB_HPP
 
